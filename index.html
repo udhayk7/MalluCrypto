@@ -838,6 +838,25 @@
           </div>
         </div>
       </nav>
+      
+      <!-- Mobile Floating Navigation -->
+      <div class="mobile-floating-nav">
+        <div class="mobile-nav-container">
+          <a href="#features" class="mobile-nav-item active" data-section="features">
+            <span class="mobile-nav-text">Home</span>
+          </a>
+          <a href="#about" class="mobile-nav-item" data-section="about">
+            <span class="mobile-nav-text">About</span>
+          </a>
+          <a href="#services" class="mobile-nav-item" data-section="services">
+            <span class="mobile-nav-text">Services</span>
+          </a>
+          <a href="#testimonials" class="mobile-nav-item" data-section="testimonials">
+            <span class="mobile-nav-text">Reviews</span>
+          </a>
+        </div>
+      </div>
+      
       <main class="main">
         <header class="hero">
           <div class="page-padding">
@@ -920,7 +939,7 @@
           />
           <div class="stars-curve-bottom"></div>
         </div>
-        <section class="section-highlights">
+        <section id="features" class="section-highlights">
           <div class="container page-padding">
             <div class="section-header">
             <h2 class="heading-medium">
@@ -1447,8 +1466,8 @@
           </div>
         </section>
         <div class="feature-sections-wrap">
-          <section class="section-feature section-feature--issues">
-            <div class="light-bar"></div>
+                  <section id="about" class="section-feature section-feature--issues">
+          <div class="light-bar"></div>
             <div class="container page-padding">
               <div class="feature-section-header">
                 <h2 class="feature-heading">
@@ -1666,8 +1685,8 @@
               </div>
             </div>
           </section>
-          <section class="section-feature section-feature--cycles">
-            <div class="light-bar"></div>
+                  <section id="services" class="section-feature section-feature--cycles">
+          <div class="light-bar"></div>
             <div class="container page-padding">
               <div class="feature-section-header">
                 <h2 class="feature-heading">
@@ -1848,8 +1867,8 @@
               <div class="divider"></div>
               
               <!-- Scrolling Testimonials -->
-              <div style="overflow: hidden; margin: 48px 0; position: relative;">
-                <div class="testimonials-scroll" style="display: flex; gap: 24px; animation: scroll 30s linear infinite; width: max-content;">
+              <div style="overflow: hidden; margin: 48px 0; padding: 10px 0; position: relative; cursor: pointer;">
+                <div class="testimonials-scroll" style="display: flex; gap: 24px; animation: scroll 25s linear infinite; width: max-content; will-change: transform;">
                   <!-- First set of testimonials -->
                   <div class="feature-card" style="background: linear-gradient(135deg, rgba(102, 99, 246, 0.1), rgba(120, 119, 198, 0.05)); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 32px; min-width: 400px; flex-shrink: 0;">
                     <div class="feature-card-content">
@@ -2031,6 +2050,119 @@
         onEnter: () =>
           document.querySelector(".hero-img-target").classList.add("visible"),
       });
+
+      // Testimonials scroll control
+      const testimonialsContainer = document.querySelector('.testimonials-scroll');
+      if (testimonialsContainer) {
+        // Pause animation on hover
+        testimonialsContainer.addEventListener('mouseenter', () => {
+          testimonialsContainer.style.animationPlayState = 'paused';
+        });
+        
+        // Resume animation on mouse leave
+        testimonialsContainer.addEventListener('mouseleave', () => {
+          testimonialsContainer.style.animationPlayState = 'running';
+        });
+        
+        // Add touch support for mobile
+        testimonialsContainer.addEventListener('touchstart', () => {
+          testimonialsContainer.style.animationPlayState = 'paused';
+        });
+        
+        testimonialsContainer.addEventListener('touchend', () => {
+          setTimeout(() => {
+            testimonialsContainer.style.animationPlayState = 'running';
+          }, 2000);
+        });
+      }
+
+      // Mobile Navigation Auto-highlight based on scroll
+      function initMobileNavigation() {
+        const mobileNavItems = document.querySelectorAll('.mobile-nav-item[data-section]');
+        const sections = document.querySelectorAll('section[id]');
+        const heroSection = document.querySelector('.hero');
+        
+        if (!mobileNavItems.length || !sections.length) return;
+        
+        function updateActiveNavItem() {
+          const scrollPosition = window.scrollY;
+          const viewportHeight = window.innerHeight;
+          
+          let activeSection = '';
+          
+          // Check if we're in the hero section first
+          if (heroSection) {
+            const heroTop = heroSection.offsetTop;
+            const heroBottom = heroTop + heroSection.offsetHeight;
+            
+            if (scrollPosition < heroBottom - (viewportHeight * 0.3)) {
+              activeSection = 'features'; // Set home as active during hero
+            }
+          }
+          
+          // If not in hero, check other sections
+          if (!activeSection) {
+            sections.forEach(section => {
+              const sectionTop = section.offsetTop;
+              const sectionBottom = sectionTop + section.offsetHeight;
+              const triggerPoint = scrollPosition + (viewportHeight * 0.3);
+              
+              if (triggerPoint >= sectionTop && triggerPoint <= sectionBottom) {
+                activeSection = section.id;
+              }
+            });
+          }
+          
+          // Update active states with animation
+          mobileNavItems.forEach(item => {
+            const isActive = item.dataset.section === activeSection;
+            if (isActive && !item.classList.contains('active')) {
+              item.classList.add('active');
+              // Add a subtle animation pulse
+              item.style.transform = 'translateY(-2px) scale(1.05)';
+              setTimeout(() => {
+                item.style.transform = 'translateY(-2px)';
+              }, 200);
+            } else if (!isActive) {
+              item.classList.remove('active');
+            }
+          });
+        }
+        
+        // Smooth scroll for mobile nav clicks
+        mobileNavItems.forEach(item => {
+          item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = item.getAttribute('href').substring(1);
+            const targetSection = document.getElementById(targetId);
+            
+            if (targetSection) {
+              targetSection.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }
+          });
+        });
+        
+        // Listen for scroll events
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+          if (!ticking) {
+            requestAnimationFrame(() => {
+              updateActiveNavItem();
+              ticking = false;
+            });
+            ticking = true;
+          }
+        });
+        
+        // Initial call
+        updateActiveNavItem();
+      }
+      
+      // Initialize mobile navigation
+      initMobileNavigation();
 
       //Feature sections light bar trigger
       document
